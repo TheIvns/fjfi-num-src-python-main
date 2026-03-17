@@ -57,51 +57,74 @@ class Ricatti:
         plt.grid(True)
         plt.show()
 
+E_1 = 0
+E_2 = 0
+erros = []
+EOC_arr= []
+steps = []
+integration_time_step_def = 1.0e-2
+for i in range(5):
+    
+    if __name__ == "__main__":
+        initial_time = 1 #far from divergence
+        final_time = 10
+        time_step = 1.0e-1
+        integration_time_step = integration_time_step_def/(2**(i))
+        steps.append( (final_time - initial_time)/integration_time_step )
+        problem = Ricatti()
 
-if __name__ == "__main__":
-    initial_time = 0.1
-    final_time = 0.2
-    time_step = 1.0e-3
-    integration_time_step = 1.0e-4
+        start_x = problem.get_exact_solution(initial_time)
 
-    problem = Ricatti()
+        integrator = Euler()
+        #integrator = RK_second_order()
+        # integrator = Merson()
 
-    integrator = Euler()
-    # integrator = RK_second_order()
-    # integrator = Merson()
+        
 
-    start_x = problem.get_exact_solution(initial_time)
+        numerical_solutions = solve_loop(
+            initial_time,
+            final_time,
+            time_step,
+            integration_time_step,
+            problem,
+            integrator,
+            [start_x],
+        )
+        if not numerical_solutions:
+            print("Error: Solution failed.")
+            exit(1)
 
-    numerical_solutions = solve_loop(
-        initial_time,
-        final_time,
-        time_step,
-        integration_time_step,
-        problem,
-        integrator,
-        [start_x],
-    )
-    if not numerical_solutions:
-        print("Error: Solution failed.")
-        exit(1)
+        max_error = 0.0
+        l1_error = 0.0
+        l2_error = 0.0
+        last_t = 0
+        diff = -1
+        #špatně error asi, možna diff funkci, protože to tam ma taky jinak 
+        for time, x in numerical_solutions:
+            if diff != -1:
+                tau = time - last_t
+                l1_error += diff * tau
+                l2_error += diff * diff * tau
+                max_error = max(max_error, diff)
+            exact_solution = problem.get_exact_solution(time)
+            diff = abs(exact_solution - x[0])
+        l2_error = math.sqrt(l2_error) #odmocnina !!
+        erros.append(l2_error)
+        E_1 = E_2
+        E_2 = l2_error
+        if E_1 != 0:
+            EOC = (math.log10( (E_1)/ (E_2)))/math.log10( (integration_time_step*2)/(integration_time_step))
+            EOC_arr.append(EOC)
+        print("L1 error:", l1_error)
+        print("L2 error:", math.sqrt(l2_error))
+        print("Max error:", max_error)
+        print("Initial solution:", start_x)
 
-    max_error = 0.0
-    l1_error = 0.0
-    l2_error = 0.0
-    last_t = 0
-    diff = -1
-    for time, x in numerical_solutions:
-        if diff != -1:
-            tau = time - last_t
-            l1_error += diff * tau
-            l2_error += diff * diff * tau
-            max_error = max(max_error, diff)
-        exact_solution = problem.get_exact_solution(time)
-        diff = abs(exact_solution - x[0])
+        exact_solutions = problem.get_exact_solutions(initial_time, final_time, time_step)
+        #problem.plot_solution(exact_solutions, numerical_solutions, "Exact vs Numerical")
 
-    print("L1 error:", l1_error)
-    print("L2 error:", math.sqrt(l2_error))
-    print("Max error:", max_error)
-
-    exact_solutions = problem.get_exact_solutions(initial_time, final_time, time_step)
-    problem.plot_solution(exact_solutions, numerical_solutions, "Exact vs Numerical")
+for i in range(len(erros)):
+    print(f"Error for integration time step {integration_time_step_def/(2**(i))}: {erros[i]}")
+for i in range(len(EOC_arr)):
+    print(f"EOC for integration time step {integration_time_step_def/(2**(i))}, {integration_time_step_def/(2**(i+1))}: {EOC_arr[i]}")
+print("Steps:", steps)
