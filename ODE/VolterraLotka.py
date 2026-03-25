@@ -5,8 +5,8 @@ import sys
 
 sys.path.append("..")
 from RungeKutta import RK_second_order
-from Euler import Euler
-from Merson import Merson
+from euler import Euler
+from merson import Merson
 from ODE import solve_loop
 
 
@@ -16,6 +16,7 @@ class VolterraLotkaProblem:
         self.b = 1.0
         self.c = 1.0
         self.d = 1.0
+
 
     def setParameters(self, _a, _b, _c, _d):
         self.a = _a
@@ -39,6 +40,10 @@ class VolterraLotkaProblem:
         u1 = u[:, 0]
         u2 = u[:, 1]
 
+        print("Initial condition: t:", t[0], " U_1:", u1[0], " U_2:", u2[0])
+
+        
+
         plt.plot(t, u1, label="u_1")
         plt.plot(t, u2, label="u_2")
         plt.xlabel("Time")
@@ -48,32 +53,37 @@ class VolterraLotkaProblem:
         plt.grid(True)
         plt.show()
 
+for i in range(5):
 
-if __name__ == "__main__":
-    initialTime = 0.0
-    finalTime = 20
-    timeStep = 1.0e-2
-    integrationTimeStep = 1.0e-3
+    if __name__ == "__main__":
+        initialTime = 0.0
+        finalTime = 20
+        timeStep = 1.0e-2
+        integrationTimeStep = 1.0e-3
 
-    problem = VolterraLotkaProblem()
-    problem.setParameters(1.0, 0.5, 1.0, 0.5)
+        problem = VolterraLotkaProblem()
+        problem.setParameters(1.0 + i, 1.0, 1.0, 1.0)
 
-    integrator = Euler()
+        integrator = Euler()
 
-    u = np.array([1.0, 0.5])
+        u = np.array([1.0, 0.5])
 
-    try:
-        solution = solve_loop(
-            initialTime,
-            finalTime,
-            timeStep,
-            integrationTimeStep,
-            problem,
-            integrator,
-            u,
-        )
-    except Exception as e:
-        print(e)
-        print("EXIT")
+        try:
+            solution = solve_loop(
+                initialTime,
+                finalTime,
+                timeStep,
+                integrationTimeStep,
+                problem,
+                integrator,
+                u,
+            )
+            
+        
 
-    problem.plot_solution(solution)
+
+        except Exception as e:
+            print(e)
+            print("EXIT")
+
+        problem.plot_solution(solution)

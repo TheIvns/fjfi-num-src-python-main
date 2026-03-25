@@ -8,7 +8,7 @@ def solve_loop(initial_time, final_time, time_step, integration_time_step, probl
     solver.setup(problem.get_degrees_of_freedom())
     time_steps_count = math.ceil(max(0.0, final_time - initial_time) / time_step)
     time = initial_time
-    solution = [(time, x)]  # Store the initial solution
+    solution = [(time, np.array(x))]  # Store the initial solution
 
 #tqdm is used to show a progress bar for the loop
     for step in tqdm(range(1, time_steps_count + 1), desc="Getting numerical solution"):
