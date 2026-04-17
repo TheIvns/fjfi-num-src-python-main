@@ -7,8 +7,8 @@ from os.path import dirname
 
 sys.path.append("..")
 
-from Euler import Euler
-from Merson import Merson
+from euler import Euler
+from merson import Merson
 from RungeKutta import RK_second_order
 from ODE import *
 
@@ -62,12 +62,12 @@ class SIRModel:
 
 
 # Parameters of the model
-n = 0.1  # birth rate
-f = 0.2  # fraction of individuals becoming immune without infection
-b = 0.5  # transmission rate   # alfa = 0.208  # covid Iran
-c = 0.3  # recovery rate  # beta = 0.085
-m = 0.06  # mortality rate
-mi = 0.065  # mortality rate for infected individuals
+n = n = 0.000028# birth rate
+f = 0.15 # fraction of individuals becoming immune without infection
+b = 1.5 # transmission rate   # alfa = 0.208  # covid Iran
+c = 0.14  # recovery rate  # beta = 0.085
+m = 0.000032  # mortality rate
+mi = 0.001 # mortality rate for infected individuals
 t_min = 0.0  # initial time
 t_max = 200  # end time
 

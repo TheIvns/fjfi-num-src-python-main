@@ -8,15 +8,15 @@ import sys
 sys.path.append("..")
 
 from RungeKutta import RK_second_order
-from Euler import Euler
-from Merson import Merson
+from euler import Euler
+from merson import Merson
 from ODE import solve_loop
 
 particles_count = 10
 initialTime = 0.0
 finalTime = 100.0
 timeStep = 0.1
-integrationTimeStep = 1.0e-1
+integrationTimeStep = 1.0e-2 #lepší vlastnosti, 10^-2 házelo nesmysly
 G = 1.0
 epsilon = 0.01
 trace_length = 10
@@ -72,9 +72,30 @@ class NBodyProblem:
         return 6 * self.particles_count
 
     def function_f(self, t, _u):
-        # TODO: Implement nbody problem
-        fu = np.random.rand(np.shape(_u)[0], np.shape(_u)[1]) * 5 - 2.5 - 0.05 * _u
-        return fu
+        
+        u_reshaped = np.reshape(_u, (2 * self.particles_count, 3))
+        pos = u_reshaped[:self.particles_count]      
+        vel = u_reshaped[self.particles_count:]
+
+        d_p_dt = vel  
+        d_v_dt = np.zeros((self.particles_count, 3))
+
+
+        for i in range(self.particles_count):
+            for j in range(self.particles_count):
+                if i == j:
+                    continue
+                
+                
+                diff = pos[j] - pos[i]
+                
+                # Vzdálenost s využitím epsilon proti dělení nulou
+                dist = np.sqrt(np.sum(diff**2) + self.epsilon**2)
+                # Newton: a_i = G * mj * (pj - pi) / dist^3
+                d_v_dt[i] += self.G * self.masses[j] * diff / (dist**3)
+            
+        fu = np.concatenate([d_p_dt, d_v_dt])
+        return fu.reshape(1, -1)
 
 
 if __name__ == "__main__":
@@ -82,20 +103,20 @@ if __name__ == "__main__":
     problem = NBodyProblem()
     problem.setParameters(particles_count, G, epsilon)
 
-    # np.random.seed(42)  # For reproducibility
+    np.random.seed(42)  # For reproducibility
     u = np.zeros(6 * particles_count)
     u = np.reshape(u, (2 * particles_count, 3))
     positions = np.random.rand(particles_count, 3) * 20 - 10
-    velocities = np.random.randn(particles_count, 3) * 0.5
+    velocities =np.random.randn(particles_count, 3) * 0.5
     global_masses = np.random.rand(particles_count) * 2 + 1
 
     problem.setMasses(global_masses)
     u[:particles_count] = positions
     u[particles_count:] = velocities
     u = np.reshape(u, (1, 6 * particles_count))
-
+    
     integrator = Euler()
-
+    
     try:
         global_solution = solve_loop(
             initialTime,
