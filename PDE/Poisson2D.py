@@ -13,7 +13,7 @@ def plot_solution_3d(solution, N, model):
     x = np.linspace(0, 1, N + 1)
     y = np.linspace(0, 1, N + 1)
     X, Y = np.meshgrid(x, y)
-    Z = solution.reshape((N + 1, N + 1))
+    Z = np.array(solution).reshape((N + 1, N + 1))
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
@@ -29,7 +29,7 @@ def plot_solution_2d(solution, N, model):
     x = np.linspace(0, 1, N + 1)
     y = np.linspace(0, 1, N + 1)
     X, Y = np.meshgrid(x, y)
-    Z = solution.reshape((N + 1, N + 1))
+    Z = np.array(solution).reshape((N + 1, N + 1))
 
     plt.figure()
     plt.contourf(X, Y, Z, cmap="viridis")
@@ -41,17 +41,37 @@ def plot_solution_2d(solution, N, model):
 
 
 def generate_Ab(n, rhs_name, boundary_name="const"):
-    A = np.zeros((n * n, n * n))
-    b = np.zeros(n * n)
+    N_total = n * n
+    A = np.zeros((N_total, N_total))
+    b = np.zeros(N_total)
+    h = 1.0 / (n - 1)
+    h_sqr = h * h
 
-    # todo - set the matrix A and boundary conditions
+    for i in range(N_total):
+        # Souřadnice v mřížce pro kontrolu okrajů
+        row = i // n
+        col = i % n
+        
 
+        if row == 0 or row == n-1 or col == 0 or col == n-1:
+            A[i, i] = 1.0
+            b[i] = 10.0  #boundary
+    
+        else:
+            A[i, i] = -4.0
+            A[i, i-1] = 1.0  
+            A[i, i+1] = 1.0 
+            A[i, i-n] = 1.0  
+            A[i, i+n] = 1.0  
+            
+            b[i] = 10.0 * h_sqr 
+            
     return A, b
 
 
 if __name__ == "__main__":
     N = 50
-    h = 1.0 / (N - 1)
+    h = 1.0 /  (N - 1)
     h_sqr = h * h
 
     # Set-up the linear system
@@ -61,7 +81,7 @@ if __name__ == "__main__":
     A, b = generate_Ab(N + 1, "linear", "const")
 
     start = time.time()
-    method = "gauss-seidel"  # "sor", "jacobi", "richardson", "gauss-seidel"
+    method = "sor"  # "sor", "jacobi", "richardson", "gauss-seidel"
 
     # Solve the linear system using StationarySolver
     solver = StationarySolver(A, b)
