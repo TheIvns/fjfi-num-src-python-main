@@ -8,8 +8,8 @@ from os.path import dirname
 
 sys.path.append("..")
 
-from Euler import Euler
-from Merson import Merson
+from euler import Euler
+from merson import Merson
 from RungeKutta import RK_second_order
 from ODE.ODE import *
 
@@ -50,21 +50,26 @@ class ExplicitHeatEquationProblem2D:
         pass
 
     def set_initial_condition(self, u):
+        c = 0.5**2
         for i in range(self.size):
             for j in range(self.size):
-                x = i * self.h
-                y = j * self.h
-                u[i, j] = 1.0 if 0.4 < x < 0.6 and 0.4 < y < 0.6 else 0.0
+                x = i * self.h - math.sqrt(c)
+                y = j * self.h - math.sqrt(c)
+                if x**2 + y**2 == c:
+                    u[i, j] = 0.0
+                elif x**2 + y**2 > c:
+                    u[i, j] = 1
+                else:
+                    u[i, j] = -1.0
 
     def function_f(self, t, u):
         fu = np.zeros((self.size, self.size))
-        # TODO: Write the numerical scheme for the heat equation
+        
         for i in range(1, self.size - 1):
             for j in range(1, self.size - 1):
                 fu[i, j] = (u[i - 1, j] - 2 * u[i, j] + u[i + 1, j]) / self.h**2 + (
                     u[i, j - 1] - 2 * u[i, j] + u[i, j + 1]
-                ) / self.h**2
-
+                ) / self.h**2 
         return fu
 
 
