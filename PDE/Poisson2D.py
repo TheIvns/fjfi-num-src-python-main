@@ -41,6 +41,7 @@ def plot_solution_2d(solution, N, model):
 
 
 def generate_Ab(n, rhs_name, boundary_name="const"):
+
     N_total = n * n
     A = np.zeros((N_total, N_total))
     b = np.zeros(N_total)
@@ -55,7 +56,7 @@ def generate_Ab(n, rhs_name, boundary_name="const"):
 
         if row == 0 or row == n-1 or col == 0 or col == n-1:
             A[i, i] = 1.0
-            b[i] = 10.0  #boundary
+            b[i] = 1.0  #boundary
     
         else:
             A[i, i] = -4.0
