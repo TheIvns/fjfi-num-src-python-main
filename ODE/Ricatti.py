@@ -59,8 +59,17 @@ class Ricatti:
 
 E_1 = 0
 E_2 = 0
-erros = []
+E_3 = 0
+E_4 = 0
+E_5 = 0
+E_6 = 0
+erros_l1 = []
+erros_l2 = []
+erros_infty = [] 
+
 EOC_arr= []
+EOC2_arr= []
+EOC3_arr= []
 steps = []
 integration_time_step_def = 1.0e-2
 for i in range(5):
@@ -75,8 +84,8 @@ for i in range(5):
 
         start_x = problem.get_exact_solution(initial_time)
 
-        integrator = Euler()
-        #integrator = RK_second_order()
+        #integrator = Euler()
+        integrator = RK_second_order()
         # integrator = Merson()
 
         
@@ -109,12 +118,27 @@ for i in range(5):
             exact_solution = problem.get_exact_solution(time)
             diff = abs(exact_solution - x[0])
         l2_error = math.sqrt(l2_error) #odmocnina !!
-        erros.append(l2_error)
+        erros_l2.append(l2_error)
+        erros_l1.append(l1_error)
+        erros_infty.append(max_error)
+
         E_1 = E_2
-        E_2 = l2_error
+        E_2 = l1_error
         if E_1 != 0:
             EOC = (math.log10( (E_1)/ (E_2)))/math.log10( (integration_time_step*2)/(integration_time_step))
             EOC_arr.append(EOC)
+
+        E_3 = E_4
+        E_4 = l2_error
+        if E_3 != 0:
+            EOC = (math.log10( (E_3)/ (E_4)))/math.log10( (integration_time_step*2)/(integration_time_step))
+            EOC2_arr.append(EOC)
+
+        E_5 = E_6
+        E_6 = max_error
+        if E_5 != 0:
+            EOC = (math.log10( (E_5)/ (E_6)))/math.log10( (integration_time_step*2)/(integration_time_step))
+            EOC3_arr.append(EOC)
         print("L1 error:", l1_error)
         print("L2 error:", math.sqrt(l2_error))
         print("Max error:", max_error)
@@ -123,8 +147,17 @@ for i in range(5):
         exact_solutions = problem.get_exact_solutions(initial_time, final_time, time_step)
         #problem.plot_solution(exact_solutions, numerical_solutions, "Exact vs Numerical")
 
-for i in range(len(erros)):
-    print(f"Error for integration time step {integration_time_step_def/(2**(i))}: {erros[i]}")
+for i in range(len(erros_l1)):
+    print(f"Error1 for integration time step {integration_time_step_def/(2**(i))}: {erros_l1[i]}")
+for i in range(len(erros_l2)):
+    print(f"Error2 for integration time step {integration_time_step_def/(2**(i))}: {erros_l2[i]}")
+for i in range(len(erros_infty)):
+    print(f"Errormax for integration time step {integration_time_step_def/(2**(i))}: {erros_infty[i]}")
+
 for i in range(len(EOC_arr)):
-    print(f"EOC for integration time step {integration_time_step_def/(2**(i))}, {integration_time_step_def/(2**(i+1))}: {EOC_arr[i]}")
+    print(f"EOC1 for integration time step {integration_time_step_def/(2**(i))}, {integration_time_step_def/(2**(i+1))}: {EOC_arr[i]}")
+for i in range(len(EOC2_arr)):
+    print(f"EOC2 for integration time step {integration_time_step_def/(2**(i))}, {integration_time_step_def/(2**(i+1))}: {EOC2_arr[i]}")
+for i in range(len(EOC3_arr)):
+    print(f"EOC3 for integration time step {integration_time_step_def/(2**(i))}, {integration_time_step_def/(2**(i+1))}: {EOC3_arr[i]}")
 print("Steps:", steps)

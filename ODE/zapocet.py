@@ -6,6 +6,8 @@ import sys
 eps = sys.float_info.epsilon
 
 #iniciace třídy, left right podmínky dodáme při vytvoření
+#kde byl problém? -> thomasův algoritmus počítá odzadu, proto to vypadalo, že se to nehýba
+#koukali sme na špatnou stranu + to nesedělo, protože sem exact sol počítal ne do rohu kvůli h/nbknots místo -1
 class zapocet:
     def __init__(self):
         self.Lcon = None
@@ -33,8 +35,8 @@ class zapocet:
         alpha[0] = 0.0
         beta[0] = self.Lcon
 
-        #velikost kroku
-        h = (self.end - self.start) / (self.nb_of_knots)
+        #velikost kroku -1 kvůli dopočítání až do rohu, for i nejde at do nb_of_knots
+        h = (self.end - self.start) / (self.nb_of_knots-1)
         
         #dosazení do typové úlohy
         for i in range (self.nb_of_knots):
@@ -62,8 +64,9 @@ class zapocet:
     
     def exact_solution(self):
         u = [0.0] * self.nb_of_knots
-        h = (self.end - self.start) / (self.nb_of_knots)
+        h = (self.end - self.start) / (self.nb_of_knots-1)
         for i in range (self.nb_of_knots):
+            
             u[i] = math.exp(math.sin(i*h + math.pi/2))
         return u
 
@@ -85,7 +88,7 @@ class zapocet:
         )
         plt.xlabel("Time")
         plt.ylabel("Solution")
-        plt.title(f"Meoda sítí")
+        plt.title(f"Metoda sítí")
         plt.legend()
         plt.grid(True)
         plt.show()
@@ -93,13 +96,15 @@ class zapocet:
 #výpočet konkrétního řešení
 if __name__ == "__main__":
     problem = zapocet()
-    u_problem = problem.Net_method(math.exp(1), 1, 100)
+    u_problem = problem.Net_method(math.exp(1), 1, 200)
     # Spojíme je do dvojic (sloupců)
     t = np.linspace(problem.start, problem.end, problem.nb_of_knots)
     data_to_save = np.column_stack((t, u_problem))
     exact_values = problem.exact_solution()
+    print("Numerické řešení:", u_problem, "\nPřesné řešení:", exact_values)
     # Uložíme
-    np.savetxt('vysledek.csv', data_to_save, delimiter=',', header='x, y', comments='')
+    np.savetxt('vysledek.csv', data_to_save, delimiter=' ', comments='', fmt='%.7f') 
+    
     #plot
     problem.plot_solution(u_problem, exact_values, t)
     

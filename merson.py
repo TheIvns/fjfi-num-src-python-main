@@ -71,6 +71,6 @@ class Merson:
                     return None, None, False
 
             if self.adaptivity:
-                tau *= 0.8 * (self.adaptivity / eps) ** 0.2
+                tau *= 0.8 * (self.adaptivity / (eps + sys.float_info.epsilon)) ** 0.2
             tau = min(tau, stop_time - time)
         return time, x, True

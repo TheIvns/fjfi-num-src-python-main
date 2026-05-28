@@ -4,7 +4,7 @@ import matplotlib
 import time as t
 from scipy.sparse import lil_matrix
 from Linear_systems.stationary_solver import StationarySolver
-from Merson import Merson
+from merson import Merson
 
 
 class HeatEquationProblem2D:
@@ -17,9 +17,25 @@ class HeatEquationProblem2D:
     def get_degrees_of_freedom(self):
         return self.sizeX * self.sizeY
 
-    def set_initial_condition(self, u, r=0.3):
-        # todo set initial conditions
-        pass
+    def set_initial_condition(self, u, r=0.1):
+    # Střed kružnice nastaven na střed oblasti [0.5, 0.5]
+        x0 = 0.5
+        y0 = 0.5
+        
+        for i in range(self.sizeX):
+            x = i * self.hx
+            for j in range(self.sizeY):
+                y = j * self.hy
+                
+                # Spočítáme čtverec vzdálenosti bodu [x, y] od středu [x0, y0]
+                distance_sqr = (x - x0)**2 + (y - y0)**2
+                
+                # Pokud je bod uvnitř kruhu o poloměru r
+                if distance_sqr < r**2:
+                    u[j, i] = 1.0  # Opraveno na standardní 2D indexování u[řádek, sloupec]
+                else:
+                    u[j, i] = 0.0
+        return u
 
     def set_initial_condition_from_pgm(self, pgm_file):
         u = np.loadtxt(pgm_file, skiprows=4)  # Skip the first 4 lines of the PGM file
@@ -28,12 +44,28 @@ class HeatEquationProblem2D:
         return u
 
     def function_f(self, time, u, k=None):
+        # Přetvarujeme plochý vektor zpět na 2D mřížku (řádky = Y, sloupce = X)
         u = u.reshape((self.sizeY, self.sizeX))
         laplacian = np.zeros_like(u)
+        
+        # Předpočítáme si jmenovatele pro zrychlení
+        hx_sqr = self.hx ** 2
+        hy_sqr = self.hy ** 2
 
+        for j in range(1, self.sizeY - 1):
+            for i in range(1, self.sizeX - 1):
+                # Druhá derivace podle X
+                d2u_dx2 = (u[j, i+1] - 2 * u[j, i] + u[j, i-1]) / hx_sqr
+                # Druhá derivace podle Y
+                d2u_dy2 = (u[j+1, i] - 2 * u[j, i] + u[j-1, i]) / hy_sqr
+                
+                # Celkový Laplacián v bodě [j, i]
+                laplacian[j, i] = d2u_dx2 + d2u_dy2
+
+        # Pro Mersona musíme vrátit jednorozměrné pole
+        return laplacian.flatten()
         # todo - calculate laplacian
 
-        return laplacian.flatten()
 
     def write_solution(self, t, step, u):
         filename = f"heat-equation-2d-{step:05d}.txt"
@@ -51,33 +83,33 @@ class HeatEquationProblem2D:
             plt.show()
 
 initial_time = 0.0
-final_time = 0.0001
-time_step = 0.00001
-integration_time_step = 0.01
-sizeX = 434
-sizeY = 606
+final_time = 0.01
+time_step = 0.001
+integration_time_step = 0.001
+sizeX = 50
+sizeY = 50
 
 if __name__ == "__main__":
     problem = HeatEquationProblem2D(sizeX, sizeY)
-
-    pgm_file = "motyl.txt"
-    u = problem.set_initial_condition_from_pgm(pgm_file)
-
+    u = np.zeros((sizeX, sizeY))
+    """pgm_file = "motyl.txt"
+    u = problem.set_initial_condition_from_pgm(pgm_file)"""
+    u = problem.set_initial_condition(u)
     problem.write_solution(0.0, 0, u)
 
-    stationary = False
+    stationary = True  
 
-    # Use LIL matrix (list of lists) for ease of modification
-    A = lil_matrix((sizeX * sizeY, sizeX * sizeY))
+    A = np.eye(sizeX * sizeY, sizeX * sizeY) #aby to nepadalo při inciaci solveru, stejně se to pak přepíše
     b = np.zeros(sizeX * sizeY)
 
-    # todo - Set boundary conditions for A
 
+    
     start = t.time()
     if stationary:
         solver = StationarySolver(A, b)
         solver.set_max_iterations(10000)
-        solver.relaxation = 1.6
+        solver.relaxation = 1.9
+        print("sor par", solver.relaxation)
     else:
         solver = Merson()
         solver.setup(problem.get_degrees_of_freedom())
@@ -102,7 +134,24 @@ if __name__ == "__main__":
                     for j in range(1, sizeY - 1):
                         for i in range(1, sizeX - 1):
                             index = j * sizeX + i
+                            # Sousedé v ose X (levý a pravý)
+                            index_left  = j * sizeX + (i - 1)  
+                            index_right = j * sizeX + (i + 1)  
+
+                            # Sousedé v ose Y (dolní a horní)
+                            index_down  = (j - 1) * sizeX + i   
+                            index_up    = (j + 1) * sizeX + i   
+
+                            # Vyplnění řádku matice A pro daný 'index'
+                            A[index, index_left]  = -lambda_x
+                            A[index, index_right] = -lambda_x
+
+                            A[index, index]       = 1.0 + 2.0 * lambda_x + 2.0 * lambda_y
+
+                            A[index, index_down]  = -lambda_y
+                            A[index, index_up]    = -lambda_y
                             # todo - update A
+
                 # right-hand side b
                 b[:] = u.flatten()
                 # Solve the lin system using SOR
