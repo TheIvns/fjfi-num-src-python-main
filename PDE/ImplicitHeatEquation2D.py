@@ -42,25 +42,21 @@ class HeatEquationProblem2D:
         return u
 
     def function_f(self, time, u, k=None):
-        # Přetvarujeme plochý vektor zpět na 2D mřížku (řádky = Y, sloupce = X)
         u = u.reshape((self.sizeY, self.sizeX))
         laplacian = np.zeros_like(u)
         
-        # Předpočítáme si jmenovatele pro zrychlení
         hx_sqr = self.hx ** 2
         hy_sqr = self.hy ** 2
 
         for j in range(1, self.sizeY - 1):
             for i in range(1, self.sizeX - 1):
-                # Druhá derivace podle X
+                
                 d2u_dx2 = (u[j, i+1] - 2 * u[j, i] + u[j, i-1]) / hx_sqr
-                # Druhá derivace podle Y
+                
                 d2u_dy2 = (u[j+1, i] - 2 * u[j, i] + u[j-1, i]) / hy_sqr
                 
-                # Celkový Laplacián v bodě [j, i]
                 laplacian[j, i] = d2u_dx2 + d2u_dy2
 
-        # Pro Mersona musíme vrátit jednorozměrné pole
         return laplacian.flatten()
         # todo - calculate laplacian
 
