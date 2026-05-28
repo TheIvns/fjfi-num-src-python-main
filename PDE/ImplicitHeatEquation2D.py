@@ -27,12 +27,10 @@ class HeatEquationProblem2D:
             for j in range(self.sizeY):
                 y = j * self.hy
                 
-                # Spočítáme čtverec vzdálenosti bodu [x, y] od středu [x0, y0]
                 distance_sqr = (x - x0)**2 + (y - y0)**2
                 
-                # Pokud je bod uvnitř kruhu o poloměru r
                 if distance_sqr < r**2:
-                    u[j, i] = 1.0  # Opraveno na standardní 2D indexování u[řádek, sloupec]
+                    u[j, i] = 1.0  
                 else:
                     u[j, i] = 0.0
         return u
@@ -142,7 +140,6 @@ if __name__ == "__main__":
                             index_down  = (j - 1) * sizeX + i   
                             index_up    = (j + 1) * sizeX + i   
 
-                            # Vyplnění řádku matice A pro daný 'index'
                             A[index, index_left]  = -lambda_x
                             A[index, index_right] = -lambda_x
 
